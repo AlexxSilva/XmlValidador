@@ -1,0 +1,31 @@
+## Build
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider
+.idea/
+
+## Visual Studio Code
+.vscode/
+
+## NuGet
+*.nupkg
+*.snupkg
+
+## Test results
+TestResults/
+*.trx
+
+## Logs
+*.log
+
+## OS
+.DS_Store
+Thumbs.db
