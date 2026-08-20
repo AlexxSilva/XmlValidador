@@ -1,0 +1,42 @@
+mkdir XmlValidator : Criar a pasta
+cd XmlValidator : Abrir a pasta
+dir -Force : mostrar o que tem na pasta
+
+==================DOT NET ==================================
+
+dotnet new sln -n XmlValidator : Criar solução "-n = name"
+dotnet new webapi -n XmlValidator.Api: Criar projeto API
+dotnet sln add XmlValidator.Api/XmlValidator.Api.csproj : Adicionar o projeto da API na solução
+
+dotnet list package --include-transitive: mostra pacotes do projeto e transitivos.
+
+dotnet list package --vulnerable: mostra pacotes com vulnerabilidades conhecidas.
+
+dotnet restore: restaura o projeto
+
+dotnet --version: mostra versão do dotnet
+
+dotnet add package Microsoft.OpenApi : Adiciona o pacote
+
+
+=========================GIT ==========================
+
+git init: Iniciar repositório git
+
+git status: Status do repositório
+
+git add . : Adicionar arquivos para commit
+
+git commit -m "Initial commit" : Commitar os arquivos
+
+git remote add origin https://github.com/SEU-USUARIO/XmlValidador.git : criar repositório remoto (pasta deve existir no servidor)
+
+git remote -v : lista repositório remoto
+
+git branch -M main: renomeia a branch master para main
+git push -u origin main: sobe o repositório remoto
+git status: mostra o status do repositório atual
+
+New-Item .gitignore -ItemType File > cria arquivo git ignore.
+
+
