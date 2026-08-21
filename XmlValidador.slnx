@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="XmlValidador.Api/XmlValidador.Api.csproj" />
+  <Project Path="XmlValidador.Application/XmlValidador.Application.csproj" />
+  <Project Path="XmlValidador.Domain/XmlValidador.Domain.csproj" />
+  <Project Path="XmlValidador.Infrastructure/XmlValidador.Infrastructure.csproj" />
 </Solution>
