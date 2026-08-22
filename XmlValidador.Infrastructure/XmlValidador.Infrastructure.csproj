@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\XmlValidador.Application\XmlValidador.Application.csproj" />
+    <ProjectReference Include="..\XmlValidador.Domain\XmlValidador.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -11,4 +11,10 @@
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\XmlValidador.Application\XmlValidador.Application.csproj" />
+    <ProjectReference Include="..\XmlValidador.Domain\XmlValidador.Domain.csproj" />
+    <ProjectReference Include="..\XmlValidador.Infrastructure\XmlValidador.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
