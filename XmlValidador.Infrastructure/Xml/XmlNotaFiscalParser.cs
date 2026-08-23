@@ -12,198 +12,288 @@ namespace XmlValidador.Infrastructure.Xml
     {
         public NotaFiscal Parse(string xml)
         {
-            //if (string.IsNullOrWhiteSpace(xml))
-            //    throw new ArgumentException("O XML não pode ser vazio.");
+            if (string.IsNullOrWhiteSpace(xml))
+                throw new ArgumentException("O XML não pode ser vazio.");
 
-            //var documento = XDocument.Parse(xml);
+            var documento = XDocument.Parse(xml);
 
-            //XNamespace ns = "http://www.portalfiscal.inf.br/nfe";
+            XNamespace ns = "http://www.portalfiscal.inf.br/nfe";
 
-            //var infNFe = documento
-            //    .Descendants(ns + "infNFe")
-            //    .FirstOrDefault();
+            var infNFe = documento
+                .Descendants(ns + "infNFe")
+                .FirstOrDefault();
 
-            //if (infNFe == null)
-            //    throw new InvalidOperationException(
-            //        "O XML não possui o elemento infNFe.");
+            if (infNFe == null)
+                throw new InvalidOperationException(
+                    "O XML não possui o elemento infNFe.");
 
-            //// =========================
-            //// CHAVE DE ACESSO
-            //// =========================
+            // =========================
+            // CHAVE DE ACESSO
+            // =========================
 
-            //var chave = infNFe
-            //    .Attribute("Id")?
-            //    .Value;
+            var chave = infNFe
+                .Attribute("Id")?
+                .Value;
 
-            //if (string.IsNullOrWhiteSpace(chave))
-            //    throw new InvalidOperationException(
-            //        "Chave de acesso não encontrada.");
+            if (string.IsNullOrWhiteSpace(chave))
+                throw new InvalidOperationException(
+                    "Chave de acesso não encontrada.");
 
-            //chave = chave.Replace("NFe", "");
+            if (chave.StartsWith("NFe"))
+                chave = chave.Substring(3);
 
-            //var chaveAcesso = new ChaveAcessoNfe(chave);
+            var chaveAcesso = new ChaveAcessoNfe(chave);
 
-            //// =========================
-            //// EMITENTE
-            //// =========================
+            // =========================
+            // EMITENTE
+            // =========================
 
-            //var emit = infNFe.Element(ns + "emit");
+            var emit = infNFe.Element(ns + "emit");
 
-            //if (emit == null)
-            //    throw new InvalidOperationException(
-            //        "Emitente não encontrado.");
+            if (emit == null)
+                throw new InvalidOperationException(
+                    "Emitente não encontrado.");
 
-            //var cnpjTexto = emit
-            //    .Element(ns + "CNPJ")?
-            //    .Value;
+            var razaoSocial = emit
+                .Element(ns + "xNome")?
+                .Value;
 
-            //var nome = emit
-            //    .Element(ns + "xNome")?
-            //    .Value;
+            var nomeFantasia = emit
+                .Element(ns + "xFant")?
+                .Value;
 
-            //if (string.IsNullOrWhiteSpace(cnpjTexto))
-            //    throw new InvalidOperationException(
-            //        "CNPJ do emitente não encontrado.");
+            var cnpj = emit
+                .Element(ns + "CNPJ")?
+                .Value;
 
-            //if (string.IsNullOrWhiteSpace(nome))
-            //    throw new InvalidOperationException(
-            //        "Nome do emitente não encontrado.");
+            var inscricaoEstadual = emit
+                .Element(ns + "IE")?
+                .Value;
 
-            //var cnpj = new Cnpj(cnpjTexto);
+            if (string.IsNullOrWhiteSpace(cnpj))
+                throw new InvalidOperationException(
+                    "CNPJ do emitente não encontrado.");
 
-            //var empresa = new Empresa(
-            //    cnpj,
-            //    nome
-            //);
+            if (string.IsNullOrWhiteSpace(razaoSocial))
+                throw new InvalidOperationException(
+                    "Nome do emitente não encontrado.");
 
-            //// =========================
-            //// DATA DE EMISSÃO
-            //// =========================
+            var endereco = emit.Element(ns + "enderEmit");
 
-            //var ide = infNFe.Element(ns + "ide");
+            if (endereco == null)
+                throw new InvalidOperationException(
+                    "Endereço do emitente não encontrado.");
 
-            //var dataEmissaoTexto = ide?
-            //    .Element(ns + "dhEmi")?
-            //    .Value;
+            var logradouro = endereco.Element(ns + "xLgr")?.Value;
+            var nro = endereco.Element(ns + "nro")?.Value;
+            var bairro = endereco.Element(ns + "xBairro")?.Value;
+            var cMunicipio = endereco.Element(ns + "cMun")?.Value;
+            var municipio = endereco.Element(ns + "xMun")?.Value;
+            var uf = endereco.Element(ns + "UF")?.Value;
+            var cep = endereco.Element(ns + "CEP")?.Value;
+            var cPais = endereco.Element(ns + "cPais")?.Value;
+            var pais = endereco.Element(ns + "xPais")?.Value;
 
-            //if (!DateTime.TryParse(dataEmissaoTexto, out var dataEmissao))
-            //    throw new InvalidOperationException(
-            //        "Data de emissão inválida.");
+            var cnpjFormat = new Cnpj(cnpj);
 
-            //// =========================
-            //// ITENS
-            //// =========================
+            var empresa = new Empresa(
+                razaoSocial,
+                nomeFantasia,
+                cnpjFormat,
+                inscricaoEstadual,
+                logradouro,
+                nro,
+                bairro,
+                cMunicipio,
+                municipio,
+                uf,
+                cep,
+                cPais,
+                pais);
 
-            //var itens = new List<ItemNotaFiscal>();
+            // =========================
+            // IDENTIFICAÇÃO DA NOTA
+            // =========================
 
-            //foreach (var det in infNFe.Elements(ns + "det"))
-            //{
-            //    var prod = det.Element(ns + "prod");
+            var ide = infNFe.Element(ns + "ide");
 
-            //    if (prod == null)
-            //        continue;
+            if (ide == null)
+                throw new InvalidOperationException(
+                    "Elemento ide não encontrado.");
 
-            //    var codigo = prod
-            //        .Element(ns + "cProd")?
-            //        .Value;
+            var dataEmissaoTexto = ide
+                .Element(ns + "dhEmi")?
+                .Value;
 
-            //    var descricao = prod
-            //        .Element(ns + "xProd")?
-            //        .Value;
+            if (!DateTime.TryParse(
+                    dataEmissaoTexto,
+                    out var dataEmissao))
+            {
+                throw new InvalidOperationException(
+                    "Data de emissão inválida.");
+            }
 
-            //    var quantidadeTexto = prod
-            //        .Element(ns + "qCom")?
-            //        .Value;
+            var numeroNotaTexto = ide
+                .Element(ns + "nNF")?
+                .Value;
 
-            //    var valorUnitarioTexto = prod
-            //        .Element(ns + "vUnCom")?
-            //        .Value;
+            if (!int.TryParse(
+                    numeroNotaTexto,
+                    out var numeroNota))
+            {
+                throw new InvalidOperationException(
+                    "Número da NF-e inválido.");
+            }
 
-            //    var valorTotalTexto = prod
-            //        .Element(ns + "vProd")?
-            //        .Value;
+            var serieTexto = ide
+                .Element(ns + "serie")?
+                .Value;
 
-            //    if (!decimal.TryParse(
-            //            quantidadeTexto,
-            //            System.Globalization.NumberStyles.Any,
-            //            System.Globalization.CultureInfo.InvariantCulture,
-            //            out var quantidade))
-            //    {
-            //        throw new InvalidOperationException(
-            //            $"Quantidade inválida no item {codigo}.");
-            //    }
+            if (!int.TryParse(
+                    serieTexto,
+                    out var serie))
+            {
+                throw new InvalidOperationException(
+                    "Série da NF-e inválida.");
+            }
 
-            //    if (!decimal.TryParse(
-            //            valorUnitarioTexto,
-            //            System.Globalization.NumberStyles.Any,
-            //            System.Globalization.CultureInfo.InvariantCulture,
-            //            out var valorUnitario))
-            //    {
-            //        throw new InvalidOperationException(
-            //            $"Valor unitário inválido no item {codigo}.");
-            //    }
+            // =========================
+            // TOTAL DA NOTA
+            // =========================
 
-            //    if (!decimal.TryParse(
-            //            valorTotalTexto,
-            //            System.Globalization.NumberStyles.Any,
-            //            System.Globalization.CultureInfo.InvariantCulture,
-            //            out var valorTotal))
-            //    {
-            //        throw new InvalidOperationException(
-            //            $"Valor total inválido no item {codigo}.");
-            //    }
+            var icmsTot = infNFe
+                .Element(ns + "total")?
+                .Element(ns + "ICMSTot");
 
-            //    var item = new ItemNotaFiscal(
-            //        codigo,
-            //        descricao,
-            //        quantidade,
-            //        valorUnitario,
-            //        valorTotal
-            //    );
+            if (icmsTot == null)
+                throw new InvalidOperationException(
+                    "Totais da NF-e não encontrados.");
 
-            //    itens.Add(item);
-            //}
+            var valorTotalNotaTexto = icmsTot
+                .Element(ns + "vNF")?
+                .Value;
 
-            //// =========================
-            //// TOTAL DA NOTA
-            //// =========================
+            if (!decimal.TryParse(
+                    valorTotalNotaTexto,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var valorTotalNota))
+            {
+                throw new InvalidOperationException(
+                    "Valor total da NF-e inválido.");
+            }
 
-            //var icmsTot = infNFe
-            //    .Element(ns + "total")?
-            //    .Element(ns + "ICMSTot");
+            var valorMonetario =
+                new ValorMonetario(valorTotalNota);
 
-            //var valorTotalNotaTexto = icmsTot?
-            //    .Element(ns + "vNF")?
-            //    .Value;
+            // =========================
+            // CRIA NOTA FISCAL
+            // =========================
 
-            //if (!decimal.TryParse(
-            //        valorTotalNotaTexto,
-            //        System.Globalization.NumberStyles.Any,
-            //        System.Globalization.CultureInfo.InvariantCulture,
-            //        out var valorTotalNota))
-            //{
-            //    throw new InvalidOperationException(
-            //        "Valor total da NF-e inválido.");
-            //}
+            var notaFiscal = new NotaFiscal(
+                chaveAcesso,
+                numeroNota,
+                serie,
+                dataEmissao,
+                empresa,
+                valorMonetario);
 
-            //var valorMonetario = new ValorMonetario(
-            //    valorTotalNota
-            //);
+            // =========================
+            // ITENS
+            // =========================
 
-            //// =========================
-            //// NOTA FISCAL
-            //// =========================
+            foreach (var det in infNFe.Elements(ns + "det"))
+            {
+                var prod = det.Element(ns + "prod");
 
-            //var notaFiscal = new NotaFiscal(
-            //    chaveAcesso,
-            //    empresa,
-            //    dataEmissao,
-            //    valorMonetario,
-            //    itens
-            //);
+                if (prod == null)
+                    continue;
 
-            //return notaFiscal;
-            return null;
+                var numeroItemTexto = det
+                    .Attribute("nItem")?
+                    .Value;
+
+                if (!int.TryParse(
+                        numeroItemTexto,
+                        out var numeroItem))
+                {
+                    throw new InvalidOperationException(
+                        "Número do item inválido.");
+                }
+
+                var codigo = prod
+                    .Element(ns + "cProd")?
+                    .Value;
+
+                var descricao = prod
+                    .Element(ns + "xProd")?
+                    .Value;
+
+                var quantidadeTexto = prod
+                    .Element(ns + "qCom")?
+                    .Value;
+
+                var valorUnitarioTexto = prod
+                    .Element(ns + "vUnCom")?
+                    .Value;
+
+                var valorTotalTexto = prod
+                    .Element(ns + "vProd")?
+                    .Value;
+
+                if (!decimal.TryParse(
+                        quantidadeTexto,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var quantidade))
+                {
+                    throw new InvalidOperationException(
+                        $"Quantidade inválida no item {numeroItem}.");
+                }
+
+                if (!decimal.TryParse(
+                        valorUnitarioTexto,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var valorUnitario))
+                {
+                    throw new InvalidOperationException(
+                        $"Valor unitário inválido no item {numeroItem}.");
+                }
+
+                if (!decimal.TryParse(
+                        valorTotalTexto,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var valorTotal))
+                {
+                    throw new InvalidOperationException(
+                        $"Valor total inválido no item {numeroItem}.");
+                }
+
+                var valorUnitarioFormat =
+                    new ValorMonetario(valorUnitario);
+
+                var valorTotalFormat =
+                    new ValorMonetario(valorTotal);
+
+                var item = new ItemNotaFiscal(
+                  notaFiscal.Id,
+                  numeroItem,
+                  codigo,
+                  descricao,
+                  quantidade,
+                  valorUnitarioFormat,
+                  valorTotalFormat);
+
+                notaFiscal.AdicionarItem(item);
+            }
+
+            // =========================
+            // RETORNO
+            // =========================
+
+            return notaFiscal;
         }
     }
 }

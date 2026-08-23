@@ -18,10 +18,7 @@ namespace XmlValidador.Application.UseCases.ValidarXml
         public ResultadoValidarXmlDto ValidarXml(ValidarXmlRequestDto xml)
         {
             var notaFiscal = _parser.Parse(xml.Xml);
-
-            // próximas validações...
-
-            throw new NotImplementedException();
+            return new ResultadoValidarXmlDto();
         }
     }
 }
