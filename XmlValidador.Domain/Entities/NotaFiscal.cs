@@ -34,8 +34,19 @@ namespace XmlValidador.Domain.Entities
             Empresa empresa,
             ValorMonetario valorTotal)
         {
-            Id = Guid.NewGuid();
 
+            if (numero <= 0)
+                throw new ArgumentException(
+                    "O número da NF-e deve ser maior que zero.");
+
+            if (serie <= 0)
+                throw new ArgumentException(
+                    "A série da NF-e deve ser maior que zero.");
+
+            if (empresa == null)
+                throw new ArgumentNullException(nameof(empresa));
+
+            Id = Guid.NewGuid();
             ChaveAcesso = chaveAcesso;
             Numero = numero;
             Serie = serie;
@@ -46,6 +57,9 @@ namespace XmlValidador.Domain.Entities
 
         public void AdicionarItem(ItemNotaFiscal item)
         {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+
             _itens.Add(item);
         }
     }

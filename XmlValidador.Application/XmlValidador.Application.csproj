@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DTOs\ValidarXmlRequestDto.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\XmlValidador.Domain\XmlValidador.Domain.csproj" />
   </ItemGroup>
 

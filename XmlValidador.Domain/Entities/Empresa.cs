@@ -8,7 +8,7 @@ namespace XmlValidador.Domain.Entities;
 public class Empresa
 {
     public Guid Id { get; private set; }
-    public string? RazaoSocial { get; private set; }
+    public string RazaoSocial { get; private set; }
     public string? NomeFantasia { get; private set; }
     public Cnpj Cnpj { get; private set; }
     public string? InscricaoEstadual { get; private set; }
@@ -23,7 +23,7 @@ public class Empresa
     public string? Pais { get; private set; }
     public DateTime DataCadastro { get; private set; }
 
-    public Empresa(string? razaoSocial, string? nomeFantasia, Cnpj cnpj, 
+    public Empresa(string razaoSocial, string? nomeFantasia, Cnpj cnpj, 
         string? inscricaoEstadual, string? lgr, string? nro, string? bairro, 
         string? cMun, string? mun, string? uF, string? cEP, string? cPais, string? pais)
     {

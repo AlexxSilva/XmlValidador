@@ -5,8 +5,8 @@ using XmlValidador.Application.DTOs;
 
 namespace XmlValidador.Application.UseCases.ValidarXml
 {
-    public interface IValidarXml
+    public interface IValidarXmlUseCase
     {
-        ResultadoValidarXmlDto ValidarXml(ValidarXmlRequestDto Xml);
+        ResultadoValidacaoDto Executar(string xml);
     }
 }

@@ -6,19 +6,37 @@ using XmlValidador.Application.Interfaces;
 
 namespace XmlValidador.Application.UseCases.ValidarXml
 {
-    public class ValidarXmlUseCase : IValidarXml
+    public class ValidarXmlUseCase : IValidarXmlUseCase
     {
         private readonly IXmlNotaFiscalParser _parser;
+        private readonly IEnumerable<IRegraValidacao> _regras;
 
-        public ValidarXmlUseCase(IXmlNotaFiscalParser parser)
+        public ValidarXmlUseCase(IXmlNotaFiscalParser parser, 
+                                IEnumerable<IRegraValidacao> regras)
         {
             _parser = parser;
+            _regras = regras;
         }
 
-        public ResultadoValidarXmlDto ValidarXml(ValidarXmlRequestDto xml)
+
+        //Orquestrar o processo de validação da nota.
+        public ResultadoValidacaoDto Executar(string xml)
         {
-            var notaFiscal = _parser.Parse(xml.Xml);
-            return new ResultadoValidarXmlDto();
+            var resultado = new ResultadoValidacaoDto();
+
+            var notaFiscal = _parser.Parse(xml);
+
+            foreach (var regra in _regras)
+            {
+                var erro = regra.Validar(notaFiscal);
+
+                if (erro != null)
+                    resultado.Erros.Add(erro);
+            }
+
+            resultado.Valido = !resultado.Erros.Any();
+
+            return resultado;
         }
     }
 }

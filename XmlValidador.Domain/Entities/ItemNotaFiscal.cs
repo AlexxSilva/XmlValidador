@@ -21,7 +21,19 @@ namespace XmlValidador.Domain.Entities
         public ItemNotaFiscal(Guid notaFiscalId,int nitem,string? codigoProduto,string? descricao,
         decimal quantidade,ValorMonetario valorUnitario,ValorMonetario valorTotal)
         {
-            Id = new Guid();
+
+            if (nitem <= 0)
+                throw new ArgumentException(
+                    "O número do item deve ser maior que zero.");
+
+
+            if (quantidade <= 0)
+                throw new ArgumentException(
+                    "A quantidade deve ser maior que zero.");
+
+
+
+            Id = Guid.NewGuid();
             NotaFiscalId = notaFiscalId;
             Nitem = nitem;
             CodigoProduto = codigoProduto;
@@ -30,6 +42,8 @@ namespace XmlValidador.Domain.Entities
             ValorUnitario = valorUnitario;
             ValorTotal = valorTotal;
             DataCadastro = DateTime.Now;
+
+
         }
 
     }

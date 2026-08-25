@@ -1,5 +1,7 @@
 using XmlValidador.Application.DTOs;
 using XmlValidador.Application.Interfaces;
+using XmlValidador.Application.UseCases.ValidarXml;
+using XmlValidador.Application.ValidacoesXml;
 using XmlValidador.Infrastructure.Xml;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAntiforgery();
 
 builder.Services.AddScoped<IXmlNotaFiscalParser, XmlNotaFiscalParser>();
+builder.Services.AddScoped<IValidarXml, ValidarXmlUseCase>();
+builder.Services.AddScoped<IRegraValidacao, NfePossuiItensValidator>();
+builder.Services.AddScoped<IRegraValidacao, CnpjEmitenteValidator>();
+builder.Services.AddScoped<IRegraValidacao, NumeroNfeValidator>();
+builder.Services.AddScoped<IRegraValidacao, ChaveAcessoValidator>();
+builder.Services.AddScoped<IRegraValidacao, TotalItensValidator>();
 
 var app = builder.Build();
 
@@ -29,19 +37,13 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 
-app.MapPost("/teste-parser", async (
-    IFormFile arquivo,
-    IXmlNotaFiscalParser parser) =>
+app.MapPost("/validar-xml", async (IFormFile arquivo, IValidarXml validarXml) =>
 {
     using var reader = new StreamReader(arquivo.OpenReadStream());
-
     var xml = await reader.ReadToEndAsync();
-
-    var notaFiscal = parser.Parse(xml);
-
-    return Results.Ok(notaFiscal);
-})
-.DisableAntiforgery();
+    var resultado = validarXml.Executar(xml);
+    return Results.Ok(resultado);
+}).DisableAntiforgery();
 
 app.Run();
 
