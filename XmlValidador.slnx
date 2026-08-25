@@ -5,4 +5,5 @@
   <Project Path="XmlValidador.Infrastructure/XmlValidador.Infrastructure.csproj">
     <BuildDependency Project="XmlValidador.Application/XmlValidador.Application.csproj" />
   </Project>
+  <Project Path="XmlValidador.Tests/XmlValidador.Tests.csproj" Id="7a2b22d1-e5ee-48e0-9a43-8128558f000b" />
 </Solution>

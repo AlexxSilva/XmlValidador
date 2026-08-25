@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using XmlValidador.Application.DTOs;
 using XmlValidador.Application.Interfaces;
+using XmlValidador.Domain.Exceptions;
 
 namespace XmlValidador.Application.UseCases.ValidarXml
 {
@@ -24,14 +25,21 @@ namespace XmlValidador.Application.UseCases.ValidarXml
         {
             var resultado = new ResultadoValidacaoDto();
 
-            var notaFiscal = _parser.Parse(xml);
-
-            foreach (var regra in _regras)
+            try
             {
-                var erro = regra.Validar(notaFiscal);
+                var notaFiscal = _parser.Parse(xml);
 
-                if (erro != null)
-                    resultado.Erros.Add(erro);
+                foreach (var regra in _regras)
+                {
+                    var erro = regra.Validar(notaFiscal);
+
+                    if (erro != null)
+                        resultado.Erros.Add(erro);
+                }
+            }
+            catch (XmlInvalidoException ex)
+            {
+                resultado.Erros.Add(ex.Message);
             }
 
             resultado.Valido = !resultado.Erros.Any();

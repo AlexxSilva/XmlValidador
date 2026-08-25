@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 using System.Xml.Linq;
 using XmlValidador.Application.Interfaces;
 using XmlValidador.Domain.Entities;
+using XmlValidador.Domain.Exceptions;
 using XmlValidador.Domain.ValueObjects;
 
 namespace XmlValidador.Infrastructure.Xml
@@ -12,52 +14,224 @@ namespace XmlValidador.Infrastructure.Xml
     {
         public NotaFiscal Parse(string xml)
         {
+
             if (string.IsNullOrWhiteSpace(xml))
-                throw new ArgumentException("O XML não pode ser vazio.");
+                throw new XmlInvalidoException("O XML não pode ser vazio.");
 
-            var documento = XDocument.Parse(xml);
+            try
+            {
+                var documento = XDocument.Parse(xml);
 
-            XNamespace ns = "http://www.portalfiscal.inf.br/nfe";
+                XNamespace ns = "http://www.portalfiscal.inf.br/nfe";
 
-            var infNFe = documento
-                .Descendants(ns + "infNFe")
-                .FirstOrDefault();
+                var infNFe = documento
+                    .Descendants(ns + "infNFe")
+                    .FirstOrDefault();
 
-            if (infNFe == null)
-                throw new InvalidOperationException(
-                    "O XML não possui o elemento infNFe.");
+                if (infNFe == null)
+                    throw new XmlInvalidoException(
+                        "O XML não possui o elemento infNFe.");
 
-            DateTime dataEmissao;
-            int numeroNota = 0;
-            int serie = 0;
+                var identificacao = ExtrairIdentificacao(ns, infNFe);
 
-            ExtrairIdentificacao(ns, infNFe, out dataEmissao, out numeroNota, out serie);
+                var chaveAcesso = ExtrairChave(infNFe);
 
-            var chaveAcesso = ExtrairChave(infNFe);
+                var empresa = ExtrairEmpresa(infNFe, ns);
 
-            var empresa = ExtrairEmpresa(infNFe, ns);
+                ValorMonetario valorTotalNota = ExtrairTotalNota(ns, infNFe);
 
-            decimal valorTotalNota = ExtrairTotalNota(ns, infNFe);
+                var notaFiscal = new NotaFiscal(
+                    chaveAcesso,
+                    identificacao.Numero,
+                    identificacao.Serie,
+                    identificacao.DataEmissao,
+                    empresa,
+                    valorTotalNota);
 
-            var valorMonetario =
-                new ValorMonetario(valorTotalNota);
+                AdicionarItens(ns, infNFe, notaFiscal);
+                return notaFiscal;
+            }
+            catch (XmlException)
+            {
+                throw new XmlInvalidoException(
+                    "O XML possui uma estrutura inválida.");
+            }
+        }
 
-            // =========================
-            // CRIA NOTA FISCAL
-            // =========================
+   
+        private static IdentificacaoNfe ExtrairIdentificacao(XNamespace ns, XElement infNFe)
+        {
+            var ide = infNFe.Element(ns + "ide");
 
-            var notaFiscal = new NotaFiscal(
-                chaveAcesso,
-                numeroNota,
-                serie,
-                dataEmissao,
-                empresa,
-                valorMonetario);
+            if (ide == null)
+                throw new XmlInvalidoException(
+                    "Elemento ide não encontrado.");
 
-            // =========================
-            // ITENS
-            // =========================
+            var dataEmissaoTexto = ide.Element(ns + "dhEmi")?.Value;
 
+            if (!DateTime.TryParse(dataEmissaoTexto, out var dataEmissao))
+            {
+                throw new XmlInvalidoException(
+                    "Data de emissão inválida.");
+            }
+
+            var numeroNotaTexto = ide.Element(ns + "nNF")?.Value;
+
+            if (!int.TryParse(numeroNotaTexto,out var numeroNota))
+            {
+                throw new XmlInvalidoException(
+                    "Número da NF-e inválido.");
+            }
+
+            var serieTexto = ide.Element(ns + "serie")?.Value;
+
+            if (!int.TryParse(serieTexto,out var serie))
+            {
+                throw new XmlInvalidoException(
+                    "Série da NF-e inválida.");
+            }
+
+            return new IdentificacaoNfe(dataEmissao,numeroNota, serie);
+        }
+
+        private static ChaveAcessoNfe ExtrairChave(XElement infNFe)
+        {
+            var chave = infNFe
+                .Attribute("Id")?
+                .Value;
+
+            if (string.IsNullOrWhiteSpace(chave))
+                throw new XmlInvalidoException(
+                    "Chave de acesso não encontrada.");
+
+            if (chave.StartsWith("NFe"))
+                chave = chave.Substring(3);
+
+            try
+            {
+                return new ChaveAcessoNfe(chave);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new XmlInvalidoException(
+                    $"Chave de acesso inválida: {ex.Message}");
+            }
+        }
+
+        private static Empresa ExtrairEmpresa(XElement infNFe, XNamespace ns)
+        {
+
+            var emit = infNFe.Element(ns + "emit");
+
+            if (emit == null)
+                throw new XmlInvalidoException(
+                    "Emitente não encontrado.");
+
+            var razaoSocial = emit
+                .Element(ns + "xNome")?
+                .Value;
+
+            var nomeFantasia = emit
+                .Element(ns + "xFant")?
+                .Value;
+
+            var cnpj = emit
+                .Element(ns + "CNPJ")?
+                .Value;
+
+            var inscricaoEstadual = emit
+                .Element(ns + "IE")?
+                .Value;
+
+            if (string.IsNullOrWhiteSpace(cnpj))
+                throw new XmlInvalidoException(
+                    "CNPJ do emitente não encontrado.");
+
+            if (string.IsNullOrWhiteSpace(razaoSocial))
+                throw new XmlInvalidoException(
+                    "Nome do emitente não encontrado.");
+
+            var endereco = emit.Element(ns + "enderEmit");
+
+            if (endereco == null)
+                throw new XmlInvalidoException(
+                    "Endereço do emitente não encontrado.");
+
+            var logradouro = endereco.Element(ns + "xLgr")?.Value;
+            var nro = endereco.Element(ns + "nro")?.Value;
+            var bairro = endereco.Element(ns + "xBairro")?.Value;
+            var cMunicipio = endereco.Element(ns + "cMun")?.Value;
+            var municipio = endereco.Element(ns + "xMun")?.Value;
+            var uf = endereco.Element(ns + "UF")?.Value;
+            var cep = endereco.Element(ns + "CEP")?.Value;
+            var cPais = endereco.Element(ns + "cPais")?.Value;
+            var pais = endereco.Element(ns + "xPais")?.Value;
+
+            try
+            {
+                var cnpjFormat = new Cnpj(cnpj);
+
+                var empresa = new Empresa(
+                    razaoSocial,
+                    nomeFantasia,
+                    cnpjFormat,
+                    inscricaoEstadual,
+                    logradouro,
+                    nro,
+                    bairro,
+                    cMunicipio,
+                    municipio,
+                    uf,
+                    cep,
+                    cPais,
+                    pais);
+
+                return empresa;
+            }
+            catch (ArgumentException ex)
+            {
+                throw new XmlInvalidoException(
+                    $"CNPJ do emitente inválido: {ex.Message}");
+            }
+        }
+
+        private static ValorMonetario ExtrairTotalNota(XNamespace ns,XElement infNFe)
+        {
+            var icmsTot = infNFe
+                .Element(ns + "total")?
+                .Element(ns + "ICMSTot");
+
+            if (icmsTot == null)
+                throw new XmlInvalidoException(
+                    "Totais da NF-e não encontrados.");
+
+            var valorTotalNotaTexto = icmsTot
+                .Element(ns + "vNF")?
+                .Value;
+
+            if (!decimal.TryParse(
+                    valorTotalNotaTexto,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var valorTotalNota))
+            {
+                throw new XmlInvalidoException(
+                    "Valor total da NF-e inválido.");
+            }
+
+            try
+            {
+                return new ValorMonetario(valorTotalNota);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new XmlInvalidoException(
+                    $"Valor total da NF-e inválido: {ex.Message}");
+            }
+        }
+
+        private static void AdicionarItens(XNamespace ns, XElement infNFe, NotaFiscal notaFiscal)
+        {
             foreach (var det in infNFe.Elements(ns + "det"))
             {
                 var prod = det.Element(ns + "prod");
@@ -73,7 +247,7 @@ namespace XmlValidador.Infrastructure.Xml
                         numeroItemTexto,
                         out var numeroItem))
                 {
-                    throw new InvalidOperationException(
+                    throw new XmlInvalidoException(
                         "Número do item inválido.");
                 }
 
@@ -103,7 +277,7 @@ namespace XmlValidador.Infrastructure.Xml
                         System.Globalization.CultureInfo.InvariantCulture,
                         out var quantidade))
                 {
-                    throw new InvalidOperationException(
+                    throw new XmlInvalidoException(
                         $"Quantidade inválida no item {numeroItem}.");
                 }
 
@@ -113,7 +287,7 @@ namespace XmlValidador.Infrastructure.Xml
                         System.Globalization.CultureInfo.InvariantCulture,
                         out var valorUnitario))
                 {
-                    throw new InvalidOperationException(
+                    throw new XmlInvalidoException(
                         $"Valor unitário inválido no item {numeroItem}.");
                 }
 
@@ -123,187 +297,37 @@ namespace XmlValidador.Infrastructure.Xml
                         System.Globalization.CultureInfo.InvariantCulture,
                         out var valorTotal))
                 {
-                    throw new InvalidOperationException(
+                    throw new XmlInvalidoException(
                         $"Valor total inválido no item {numeroItem}.");
                 }
 
-                var valorUnitarioFormat =
-                    new ValorMonetario(valorUnitario);
+                try
+                {
+                    var valorUnitarioFormat =
+                        new ValorMonetario(valorUnitario);
 
-                var valorTotalFormat =
-                    new ValorMonetario(valorTotal);
+                    var valorTotalFormat =
+                        new ValorMonetario(valorTotal);
 
-                var item = new ItemNotaFiscal(
-                  notaFiscal.Id,
-                  numeroItem,
-                  codigo,
-                  descricao,
-                  quantidade,
-                  valorUnitarioFormat,
-                  valorTotalFormat);
+                    var item = new ItemNotaFiscal(
+                        notaFiscal.Id,
+                        numeroItem,
+                        codigo,
+                        descricao,
+                        quantidade,
+                        valorUnitarioFormat,
+                        valorTotalFormat);
 
-                notaFiscal.AdicionarItem(item);
-            }
-
-            // =========================
-            // RETORNO
-            // =========================
-
-            return notaFiscal;
-        }
-
-        private static decimal ExtrairTotalNota(XNamespace ns, XElement infNFe)
-        {
-            // =========================
-            // TOTAL DA NOTA
-            // =========================
-
-            var icmsTot = infNFe
-                .Element(ns + "total")?
-                .Element(ns + "ICMSTot");
-
-            if (icmsTot == null)
-                throw new InvalidOperationException(
-                    "Totais da NF-e não encontrados.");
-
-            var valorTotalNotaTexto = icmsTot
-                .Element(ns + "vNF")?
-                .Value;
-
-            if (!decimal.TryParse(
-                    valorTotalNotaTexto,
-                    System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    out var valorTotalNota))
-            {
-                throw new InvalidOperationException(
-                    "Valor total da NF-e inválido.");
-            }
-
-            return valorTotalNota;
-        }
-
-        private static void ExtrairIdentificacao(XNamespace ns, XElement infNFe, 
-            out DateTime dataEmissao, out int numeroNota, out int serie)
-        {
-            var ide = infNFe.Element(ns + "ide");
-
-            if (ide == null)
-                throw new InvalidOperationException(
-                    "Elemento ide não encontrado.");
-
-            var dataEmissaoTexto = ide
-                .Element(ns + "dhEmi")?
-                .Value;
-
-            if (!DateTime.TryParse(
-                    dataEmissaoTexto,
-                    out dataEmissao))
-            {
-                throw new InvalidOperationException(
-                    "Data de emissão inválida.");
-            }
-
-            var numeroNotaTexto = ide
-                .Element(ns + "nNF")?
-                .Value;
-
-            if (!int.TryParse(
-                    numeroNotaTexto,
-                    out numeroNota))
-            {
-                throw new InvalidOperationException(
-                    "Número da NF-e inválido.");
-            }
-
-            var serieTexto = ide
-                .Element(ns + "serie")?
-                .Value;
-
-            if (!int.TryParse(
-                    serieTexto,
-                    out serie))
-            {
-                throw new InvalidOperationException(
-                    "Série da NF-e inválida.");
+                    notaFiscal.AdicionarItem(item);
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new XmlInvalidoException(
+                        $"Dados inválidos no item {numeroItem}: {ex.Message}");
+                }
             }
         }
 
-        private ChaveAcessoNfe ExtrairChave(XElement infNFe)
-        {
-            var chave = infNFe
-                .Attribute("Id")?
-                .Value;
-
-            if (string.IsNullOrWhiteSpace(chave))
-                throw new InvalidOperationException(
-                    "Chave de acesso não encontrada.");
-
-            if (chave.StartsWith("NFe"))
-                chave = chave.Substring(3);
-
-            var chaveAcesso = new ChaveAcessoNfe(chave);
-
-            return chaveAcesso;
-        }
-
-        private Empresa ExtrairEmpresa(XElement infNFe, XNamespace ns)
-        {
-
-            var emit = infNFe.Element(ns + "emit");
-
-            if (emit == null)
-                throw new InvalidOperationException(
-                    "Emitente não encontrado.");
-
-            var razaoSocial = emit
-                .Element(ns + "xNome")?
-                .Value;
-
-            var nomeFantasia = emit
-                .Element(ns + "xFant")?
-                .Value;
-
-            var cnpj = emit
-                .Element(ns + "CNPJ")?
-                .Value;
-
-            var inscricaoEstadual = emit
-                .Element(ns + "IE")?
-                .Value;
-
-            if (string.IsNullOrWhiteSpace(cnpj))
-                throw new InvalidOperationException(
-                    "CNPJ do emitente não encontrado.");
-
-            if (string.IsNullOrWhiteSpace(razaoSocial))
-                throw new InvalidOperationException(
-                    "Nome do emitente não encontrado.");
-
-            var endereco = emit.Element(ns + "enderEmit");
-
-            if (endereco == null)
-                throw new InvalidOperationException(
-                    "Endereço do emitente não encontrado.");
-
-            var logradouro = endereco.Element(ns + "xLgr")?.Value;
-            var nro = endereco.Element(ns + "nro")?.Value;
-            var bairro = endereco.Element(ns + "xBairro")?.Value;
-            var cMunicipio = endereco.Element(ns + "cMun")?.Value;
-            var municipio = endereco.Element(ns + "xMun")?.Value;
-            var uf = endereco.Element(ns + "UF")?.Value;
-            var cep = endereco.Element(ns + "CEP")?.Value;
-            var cPais = endereco.Element(ns + "cPais")?.Value;
-            var pais = endereco.Element(ns + "xPais")?.Value;
-
-            var cnpjFormat = new Cnpj(cnpj);
-
-            var empresa = new Empresa(razaoSocial,nomeFantasia,cnpjFormat,inscricaoEstadual,
-            logradouro,nro,bairro,cMunicipio,municipio,uf,cep,cPais,pais);
-
-            return empresa;
-        }
-        
-
+        private record IdentificacaoNfe(DateTime DataEmissao, int Numero, int Serie);
     }
 }
