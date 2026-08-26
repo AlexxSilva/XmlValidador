@@ -2,7 +2,7 @@
 
 > Sistema desenvolvido em .NET para validação e análise de XMLs fiscais, com foco em boas práticas de desenvolvimento, organização arquitetural e regras de negócio testáveis.
 
-![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square\&logo=dotnet)
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square\&logo=dotnet)
 ![C#](https://img.shields.io/badge/C%23-12-239120?style=flat-square\&logo=csharp)
 ![Tests](https://img.shields.io/badge/Tests-xUnit-red?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Em%20desenvolvimento-orange?style=flat-square)
