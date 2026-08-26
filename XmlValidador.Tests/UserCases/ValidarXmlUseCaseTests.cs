@@ -1,0 +1,189 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using XmlValidador.Application.Interfaces;
+using XmlValidador.Application.UseCases.ValidarXml;
+using XmlValidador.Application.ValidacoesXml;
+using XmlValidador.Domain.Entities;
+using XmlValidador.Domain.Exceptions;
+using XmlValidador.Domain.ValueObjects;
+
+namespace XmlValidador.Tests.UserCases
+{
+    public class ValidarXmlUseCaseTests
+    {
+        [Fact]
+        public void DeveRetornarErroQuandoXmlForInvalido()
+        {
+            // Arrange
+            var parser = new ParserFakeXmlInvalido();
+
+            var regras = new List<IRegraValidacao>();
+
+            var useCase = new ValidarXmlUseCase(
+                parser,
+                regras);
+
+            // Act
+            var resultado = useCase.Executar("qualquer coisa");
+
+            // Assert
+            Assert.False(resultado.Valido);
+
+            Assert.Contains(
+             resultado.Erros,
+             erro => erro.Codigo == "XML_INVALIDO" &&
+             erro.Mensagem == "O XML possui uma estrutura inválida.");
+        }
+        [Fact]
+        public void DeveRetornarValidoQuandoXmlForValido()
+        {
+            // Arrange
+            var notaFiscal = CriarNotaFiscalValida();
+
+            var parser = new ParserFakeXmlValido(notaFiscal);
+
+            var regras = new List<IRegraValidacao>();
+
+            var useCase = new ValidarXmlUseCase(
+                parser,
+                regras);
+
+            // Act
+            var resultado = useCase.Executar("xml válido");
+
+            // Assert
+            Assert.True(resultado.Valido);
+            Assert.Empty(resultado.Erros);
+        }
+
+        [Fact]
+        public void DeveRetornarErroQuandoTotalDosItensForDiferenteDoTotalDaNota()
+        {
+            // Arrange
+            var notaFiscal = CriarNotaFiscalComTotalInvalido();
+
+            var parser = new ParserFakeXmlValido(notaFiscal);
+
+            var regras = new List<IRegraValidacao>
+            {
+                new TotalItensValidator()
+            };
+
+            var useCase = new ValidarXmlUseCase(
+                parser,
+                regras);
+
+            // Act
+            var resultado = useCase.Executar("xml válido");
+
+            // Assert
+            Assert.False(resultado.Valido);
+
+            Assert.Contains(
+            resultado.Erros,
+            erro => erro.Codigo == "NFE_VALOR_TOTAL_ITENS_INCORRETO" &&
+                    erro.Mensagem.Contains("soma dos itens"));
+        }
+
+        private Empresa CriarEmpresa()
+        {
+            return new Empresa(
+                "Empresa Teste",
+                "Empresa Teste",
+                new Cnpj("12345678000195"),
+                "123456789",
+                "Rua Teste",
+                "100",
+                "Centro",
+                "1234567",
+                "São Paulo",
+                "SP",
+                "01000000",
+                "1058",
+                "Brasil"
+            );
+        }
+
+        private NotaFiscal CriarNotaFiscalValida()
+        {
+            var empresa = CriarEmpresa();
+
+            var notaFiscal = new NotaFiscal(
+                new ChaveAcessoNfe("35260812345678000195550010000000011000000010"),
+                1,
+                1,
+                DateTime.Now,
+                empresa,
+                new ValorMonetario(150m)
+            );
+
+            var item = new ItemNotaFiscal(
+                notaFiscal.Id,
+                1,
+                "001",
+                "Produto Teste",
+                1m,
+                new ValorMonetario(150m),
+                new ValorMonetario(150m)
+            );
+
+            notaFiscal.AdicionarItem(item);
+
+            return notaFiscal;
+        }
+
+        private NotaFiscal CriarNotaFiscalComTotalInvalido()
+        {
+            var empresa = CriarEmpresa();
+
+            var notaFiscal = new NotaFiscal(
+                new ChaveAcessoNfe("35260812345678000195550010000000011000000010"),
+                1,
+                1,
+                DateTime.Now,
+                empresa,
+                new ValorMonetario(200m)
+            );
+
+            var item = new ItemNotaFiscal(
+                notaFiscal.Id,
+                1,
+                "001",
+                "Produto Teste",
+                1m,
+                new ValorMonetario(150m),
+                new ValorMonetario(150m)
+            );
+
+            notaFiscal.AdicionarItem(item);
+
+            return notaFiscal;
+        }
+
+    }
+
+    public class ParserFakeXmlInvalido : IXmlNotaFiscalParser
+    {
+        public NotaFiscal Parse(string xml)
+        {
+            throw new XmlInvalidoException(
+                "O XML possui uma estrutura inválida.");
+        }
+    }
+
+    public class ParserFakeXmlValido : IXmlNotaFiscalParser
+    {
+        private readonly NotaFiscal _notaFiscal;
+
+        public ParserFakeXmlValido(NotaFiscal notaFiscal)
+        {
+            _notaFiscal = notaFiscal;
+        }
+
+        public NotaFiscal Parse(string xml)
+        {
+            return _notaFiscal;
+        }
+    }
+}

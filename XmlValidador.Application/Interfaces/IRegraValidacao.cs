@@ -7,6 +7,8 @@ namespace XmlValidador.Application.Interfaces
 {
     public interface IRegraValidacao
     {
+
+        string Codigo { get; }
         string? Validar(NotaFiscal notaFiscal);
     }
 }

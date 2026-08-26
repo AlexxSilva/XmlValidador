@@ -19,7 +19,6 @@ builder.Services.AddScoped<IXmlNotaFiscalParser, XmlNotaFiscalParser>();
 builder.Services.AddScoped<IValidarXmlUseCase, ValidarXmlUseCase>();
 builder.Services.AddScoped<IRegraValidacao, NfePossuiItensValidator>();
 builder.Services.AddScoped<IRegraValidacao, CnpjEmitenteValidator>();
-builder.Services.AddScoped<IRegraValidacao, NumeroNfeValidator>();
 builder.Services.AddScoped<IRegraValidacao, ChaveAcessoValidator>();
 builder.Services.AddScoped<IRegraValidacao, TotalItensValidator>();
 
@@ -37,13 +36,21 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 
-app.MapPost("/validar-xml", async (IFormFile arquivo, IValidarXmlUseCase validarXml) =>
-{
-    using var reader = new StreamReader(arquivo.OpenReadStream());
-    var xml = await reader.ReadToEndAsync();
-    var resultado = validarXml.Executar(xml);
-    return Results.Ok(resultado);
-}).DisableAntiforgery();
+app.MapPost("/api/nfe/validar",
+    async (
+        IFormFile arquivo,
+        IValidarXmlUseCase validarXml) =>
+    {
+        using var reader = new StreamReader(
+            arquivo.OpenReadStream());
+
+        var xml = await reader.ReadToEndAsync();
+
+        var resultado = validarXml.Executar(xml);
+
+        return Results.Ok(resultado);
+    })
+    .DisableAntiforgery();
 
 app.Run();
 

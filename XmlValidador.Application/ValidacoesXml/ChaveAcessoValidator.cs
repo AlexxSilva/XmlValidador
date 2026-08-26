@@ -8,6 +8,7 @@ namespace XmlValidador.Application.ValidacoesXml
 {
     public class ChaveAcessoValidator : IRegraValidacao
     {
+        public string Codigo => "NFE_SEM_CHAVE_ACESSO";
         public string? Validar(NotaFiscal notaFiscal)
         {
 

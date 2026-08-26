@@ -8,6 +8,7 @@ namespace XmlValidador.Application.ValidacoesXml
 {
     public class NfePossuiItensValidator : IRegraValidacao
     {
+        public string Codigo => "NFE_SEM_ITENS";
         public string? Validar(NotaFiscal notaFiscal)
         {
             if (!notaFiscal.Itens.Any())

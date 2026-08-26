@@ -8,6 +8,8 @@ namespace XmlValidador.Application.ValidacoesXml
 {
     public class TotalItensValidator : IRegraValidacao
     {
+        public string Codigo => "NFE_VALOR_TOTAL_ITENS_INCORRETO";
+
         public string? Validar(NotaFiscal notaFiscal)
         {
             if (notaFiscal.Itens.Any())

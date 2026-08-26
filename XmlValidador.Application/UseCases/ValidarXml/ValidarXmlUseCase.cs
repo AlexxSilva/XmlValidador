@@ -4,6 +4,7 @@ using System.Text;
 using XmlValidador.Application.DTOs;
 using XmlValidador.Application.Interfaces;
 using XmlValidador.Domain.Exceptions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace XmlValidador.Application.UseCases.ValidarXml
 {
@@ -34,12 +35,16 @@ namespace XmlValidador.Application.UseCases.ValidarXml
                     var erro = regra.Validar(notaFiscal);
 
                     if (erro != null)
-                        resultado.Erros.Add(erro);
+                        resultado.Erros.Add(new ErroValidacaoDto(
+                        regra.Codigo,
+                        erro));
                 }
             }
             catch (XmlInvalidoException ex)
             {
-                resultado.Erros.Add(ex.Message);
+                resultado.Erros.Add(new ErroValidacaoDto(
+                        "XML_INVALIDO",
+                        ex.Message));
             }
 
             resultado.Valido = !resultado.Erros.Any();

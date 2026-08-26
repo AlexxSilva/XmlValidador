@@ -8,6 +8,8 @@ namespace XmlValidador.Application.ValidacoesXml
 {
     public class CnpjEmitenteValidator : IRegraValidacao
     {
+        public string Codigo => "NFE_SEM_CNPJ_EMITENTE";
+
         public string? Validar(NotaFiscal notaFiscal)
         {
 
