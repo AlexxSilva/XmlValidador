@@ -23,6 +23,11 @@ public class Empresa
     public string? Pais { get; private set; }
     public DateTime DataCadastro { get; private set; }
 
+
+    private Empresa()
+    {
+    }
+
     public Empresa(string razaoSocial, string? nomeFantasia, Cnpj cnpj, 
         string? inscricaoEstadual, string? lgr, string? nro, string? bairro, 
         string? cMun, string? mun, string? uF, string? cEP, string? cPais, string? pais)

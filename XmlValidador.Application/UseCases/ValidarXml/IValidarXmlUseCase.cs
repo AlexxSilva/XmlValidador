@@ -7,6 +7,6 @@ namespace XmlValidador.Application.UseCases.ValidarXml
 {
     public interface IValidarXmlUseCase
     {
-        ResultadoValidacaoDto Executar(string xml);
+        Task<ResultadoValidacaoDto> Executar(string xml);
     }
 }

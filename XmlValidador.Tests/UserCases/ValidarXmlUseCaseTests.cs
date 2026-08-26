@@ -13,19 +13,22 @@ namespace XmlValidador.Tests.UserCases
     public class ValidarXmlUseCaseTests
     {
         [Fact]
-        public void DeveRetornarErroQuandoXmlForInvalido()
+        public async Task DeveRetornarErroQuandoXmlForInvalido()
         {
             // Arrange
             var parser = new ParserFakeXmlInvalido();
 
             var regras = new List<IRegraValidacao>();
 
-            var useCase = new ValidarXmlUseCase(
+            var repository = new RepositoryFake();  
+
+            var useCase = new  ValidarXmlUseCase(
                 parser,
-                regras);
+                regras,
+                repository);
 
             // Act
-            var resultado = useCase.Executar("qualquer coisa");
+            var resultado = await useCase.Executar("qualquer coisa");
 
             // Assert
             Assert.False(resultado.Valido);
@@ -36,7 +39,7 @@ namespace XmlValidador.Tests.UserCases
              erro.Mensagem == "O XML possui uma estrutura inválida.");
         }
         [Fact]
-        public void DeveRetornarValidoQuandoXmlForValido()
+        public async Task DeveRetornarValidoQuandoXmlForValido()
         {
             // Arrange
             var notaFiscal = CriarNotaFiscalValida();
@@ -45,12 +48,15 @@ namespace XmlValidador.Tests.UserCases
 
             var regras = new List<IRegraValidacao>();
 
+            var repository = new RepositoryFake();
+
             var useCase = new ValidarXmlUseCase(
                 parser,
-                regras);
+                regras,
+                repository);
 
             // Act
-            var resultado = useCase.Executar("xml válido");
+            var resultado = await useCase.Executar("xml válido");
 
             // Assert
             Assert.True(resultado.Valido);
@@ -58,12 +64,14 @@ namespace XmlValidador.Tests.UserCases
         }
 
         [Fact]
-        public void DeveRetornarErroQuandoTotalDosItensForDiferenteDoTotalDaNota()
+        public async Task DeveRetornarErroQuandoTotalDosItensForDiferenteDoTotalDaNota()
         {
             // Arrange
             var notaFiscal = CriarNotaFiscalComTotalInvalido();
 
             var parser = new ParserFakeXmlValido(notaFiscal);
+
+            var repository = new RepositoryFake();
 
             var regras = new List<IRegraValidacao>
             {
@@ -72,10 +80,10 @@ namespace XmlValidador.Tests.UserCases
 
             var useCase = new ValidarXmlUseCase(
                 parser,
-                regras);
+                regras,repository);
 
             // Act
-            var resultado = useCase.Executar("xml válido");
+            var resultado = await useCase.Executar("xml válido");
 
             // Assert
             Assert.False(resultado.Valido);
@@ -184,6 +192,18 @@ namespace XmlValidador.Tests.UserCases
         public NotaFiscal Parse(string xml)
         {
             return _notaFiscal;
+        }
+    }
+
+    public class RepositoryFake : INotaFiscalRepository
+    {
+        public List<NotaFiscal> NotasSalvas { get; } = new();
+
+        public Task AdicionarAsync(NotaFiscal notaFiscal)
+        {
+            NotasSalvas.Add(notaFiscal);
+
+            return Task.CompletedTask;
         }
     }
 }

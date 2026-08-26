@@ -18,6 +18,9 @@ namespace XmlValidador.Domain.Entities
         public ValorMonetario ValorTotal { get; private set; }
         public DateTime DataCadastro { get; private set; }
 
+        private ItemNotaFiscal()
+        {
+        }
         public ItemNotaFiscal(Guid notaFiscalId,int nitem,string? codigoProduto,string? descricao,
         decimal quantidade,ValorMonetario valorUnitario,ValorMonetario valorTotal)
         {

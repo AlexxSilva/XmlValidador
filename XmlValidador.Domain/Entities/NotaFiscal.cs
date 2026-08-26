@@ -26,6 +26,10 @@ namespace XmlValidador.Domain.Entities
         public IReadOnlyCollection<ItemNotaFiscal> Itens =>
             _itens.AsReadOnly();
 
+        private NotaFiscal()
+        {
+        }
+
         public NotaFiscal(
             ChaveAcessoNfe chaveAcesso,
             int numero,

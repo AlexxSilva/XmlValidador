@@ -58,7 +58,6 @@ namespace XmlValidador.Infrastructure.Xml
             }
         }
 
-   
         private static IdentificacaoNfe ExtrairIdentificacao(XNamespace ns, XElement infNFe)
         {
             var ide = infNFe.Element(ns + "ide");
