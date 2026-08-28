@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using XmlValidador.Application.DTOs;
 using XmlValidador.Application.Interfaces;
+using XmlValidador.Application.Services;
+using XmlValidador.Application.UseCases.ImportarXml;
 using XmlValidador.Application.UseCases.ValidarXml;
 using XmlValidador.Application.ValidacoesXml;
 using XmlValidador.Domain.Entities;
@@ -32,6 +35,14 @@ builder.Services.AddScoped<IRegraValidacao, CnpjEmitenteValidator>();
 builder.Services.AddScoped<IRegraValidacao, ChaveAcessoValidator>();
 builder.Services.AddScoped<IRegraValidacao, TotalItensValidator>();
 builder.Services.AddScoped<INotaFiscalRepository, NotaFiscalRepository>();
+builder.Services.AddScoped<IValidadorNotaFiscal, ValidadorNotaFiscal>();
+builder.Services.AddScoped<IImportarXmlUseCase,ImportarXmlUseCase>();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter());
+}); //Converter enum para string no JSON
 
 var app = builder.Build();
 
@@ -58,6 +69,23 @@ app.MapPost("/api/nfe/validar",
         var xml = await reader.ReadToEndAsync();
 
         var resultado = await validarXml.Executar(xml);
+
+        return Results.Ok(resultado);
+    })
+    .DisableAntiforgery();
+
+
+app.MapPost("/api/nfe/importar",
+    async (
+        IFormFile arquivo,
+        IImportarXmlUseCase importarXml) =>
+    {
+        using var reader = new StreamReader(
+            arquivo.OpenReadStream());
+
+        var xml = await reader.ReadToEndAsync();
+
+        var resultado = await importarXml.Executar(xml);
 
         return Results.Ok(resultado);
     })

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using XmlValidador.Application.DTOs;
 using XmlValidador.Application.Interfaces;
+using XmlValidador.Application.Services;
 using XmlValidador.Domain.Exceptions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -12,54 +14,53 @@ namespace XmlValidador.Application.UseCases.ValidarXml
     public class ValidarXmlUseCase : IValidarXmlUseCase
     {
         private readonly IXmlNotaFiscalParser _parser;
-        private readonly IEnumerable<IRegraValidacao> _regras;
-        private readonly INotaFiscalRepository _repository;
+        private readonly IValidadorNotaFiscal _validador;
 
         public ValidarXmlUseCase(IXmlNotaFiscalParser parser, 
-                                IEnumerable<IRegraValidacao> regras,
-                                INotaFiscalRepository repository)
+                                IValidadorNotaFiscal validador)
         {
             _parser = parser;
-            _regras = regras;
-            _repository = repository;
+            _validador = validador;
         }
 
 
         //Orquestrar o processo de validação da nota.
-        public async Task<ResultadoValidacaoDto> Executar(string xml)
-        {
-            var resultado = new ResultadoValidacaoDto();
-
-            try
+            public async Task<ResultadoValidacaoDto> Executar(string xml)
             {
-                var notaFiscal = _parser.Parse(xml);
+                var resultado = new ResultadoValidacaoDto();
 
-                foreach (var regra in _regras)
+                try
                 {
-                    var erro = regra.Validar(notaFiscal);
+                    var notaFiscal = _parser.Parse(xml);
 
-                    if (erro != null)
-                        resultado.Erros.Add(new ErroValidacaoDto(
-                        regra.Codigo,
-                        erro));
-                }
+                    // Informações da NF para retornar na resposta
+                    resultado.NotaFiscal = new NotaFiscalValidacaoDto
+                    {
+                        ChaveAcesso = notaFiscal.ChaveAcesso.Valor,
+                        Numero = notaFiscal.Numero,
+                        Serie = notaFiscal.Serie,
+                        DataEmissao = notaFiscal.DataEmissao,
+                        CnpjEmitente = notaFiscal.Empresa.Cnpj.Valor,
+                        ValorTotal = notaFiscal.ValorTotal.Valor
+                    };
 
-                if (!resultado.Erros.Any())
-                {
-                    await _repository.AdicionarAsync(notaFiscal);
-                }
+
+                var resultadoValidacao = _validador.Validar(notaFiscal);
+
+                resultado.Erros.AddRange(resultadoValidacao.Erros);
+
 
             }
-            catch (XmlInvalidoException ex)
-            {
-                resultado.Erros.Add(new ErroValidacaoDto(
-                        "XML_INVALIDO",
-                        ex.Message));
+                catch (XmlInvalidoException ex)
+                {
+                    resultado.Erros.Add(new ErroValidacaoDto(
+                            "XML_INVALIDO",
+                            ex.Message));
+                }
+
+                resultado.Valido = !resultado.Erros.Any();
+
+                return resultado;
             }
-
-            resultado.Valido = !resultado.Erros.Any();
-
-            return resultado;
-        }
     }
 }

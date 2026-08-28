@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using XmlValidador.Application.Enums;
 
 namespace XmlValidador.Application.DTOs
 {
@@ -8,6 +9,8 @@ namespace XmlValidador.Application.DTOs
     {
         public string Codigo   { get; set; }
         public string Mensagem { get; set; }
+
+        public SeveridadeValidacao Severidade { get; set; }
 
         public ErroValidacaoDto(string codigo, string mensagem)
         {

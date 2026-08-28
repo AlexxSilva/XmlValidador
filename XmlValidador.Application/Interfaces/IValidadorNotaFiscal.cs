@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using XmlValidador.Application.DTOs;
 using XmlValidador.Domain.Entities;
 
 namespace XmlValidador.Application.Interfaces
 {
-    public interface INotaFiscalRepository
+    public interface IValidadorNotaFiscal
     {
-        Task AdicionarAsync(NotaFiscal notaFiscal);
-        Task<bool> ExistePorChaveAsync(string chaveAcesso);
+        ResultadoValidacaoDto Validar(NotaFiscal notaFiscal);
     }
 }

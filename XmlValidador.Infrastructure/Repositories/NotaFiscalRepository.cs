@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XmlValidador.Application.Interfaces;
@@ -20,6 +21,12 @@ namespace XmlValidador.Infrastructure.Repositories
         {
             _context.NotasFiscais.Add(notaFiscal);
             await _context.SaveChangesAsync();
+        }
+
+
+        public async Task<bool> ExistePorChaveAsync(string chaveAcesso)
+        {
+            return await _context.NotasFiscais.AnyAsync(x => x.ChaveAcesso.Valor == chaveAcesso);
         }
     }
 }
