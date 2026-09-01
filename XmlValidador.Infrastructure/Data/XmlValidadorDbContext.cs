@@ -12,6 +12,8 @@ namespace XmlValidador.Infrastructure.Data
         public DbSet<Empresa> Empresas { get; set; }
         public DbSet<NotaFiscal> NotasFiscais { get; set; }
         public DbSet<ItemNotaFiscal> ItensNotaFiscal { get; set; }
+        public DbSet<HistoricoValidacao> HistoricosValidacao { get; set; }
+        public DbSet<ErroHistoricoValidacao> ErrosHistoricoValidacao { get; set; }
 
         public XmlValidadorDbContext(DbContextOptions<XmlValidadorDbContext> options) 
             : base(options)

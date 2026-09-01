@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using XmlValidador.Infrastructure.Data;
 
@@ -12,9 +13,11 @@ using XmlValidador.Infrastructure.Data;
 namespace XmlValidador.Infrastructure.Migrations
 {
     [DbContext(typeof(XmlValidadorDbContext))]
-    partial class XmlValidadorDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901223652_AdicionarHistoricoValidacao")]
+    partial class AdicionarHistoricoValidacao
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -86,35 +89,6 @@ namespace XmlValidador.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Empresas", (string)null);
-                });
-
-            modelBuilder.Entity("XmlValidador.Domain.Entities.ErroHistoricoValidacao", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("HistoricoValidacaoId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Mensagem")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Severidade")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HistoricoValidacaoId");
-
-                    b.ToTable("ErrosHistoricoValidacao", (string)null);
                 });
 
             modelBuilder.Entity("XmlValidador.Domain.Entities.HistoricoValidacao", b =>
@@ -243,17 +217,6 @@ namespace XmlValidador.Infrastructure.Migrations
                     b.ToTable("NotasFiscais", (string)null);
                 });
 
-            modelBuilder.Entity("XmlValidador.Domain.Entities.ErroHistoricoValidacao", b =>
-                {
-                    b.HasOne("XmlValidador.Domain.Entities.HistoricoValidacao", "HistoricoValidacao")
-                        .WithMany("Erros")
-                        .HasForeignKey("HistoricoValidacaoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HistoricoValidacao");
-                });
-
             modelBuilder.Entity("XmlValidador.Domain.Entities.HistoricoValidacao", b =>
                 {
                     b.HasOne("XmlValidador.Domain.Entities.NotaFiscal", "NotaFiscal")
@@ -281,11 +244,6 @@ namespace XmlValidador.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Empresa");
-                });
-
-            modelBuilder.Entity("XmlValidador.Domain.Entities.HistoricoValidacao", b =>
-                {
-                    b.Navigation("Erros");
                 });
 
             modelBuilder.Entity("XmlValidador.Domain.Entities.NotaFiscal", b =>

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using XmlValidador.Application.Enums;
+using XmlValidador.Domain.Enums;
+
 
 namespace XmlValidador.Application.DTOs
 {

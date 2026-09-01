@@ -37,6 +37,7 @@ builder.Services.AddScoped<IRegraValidacao, TotalItensValidator>();
 builder.Services.AddScoped<INotaFiscalRepository, NotaFiscalRepository>();
 builder.Services.AddScoped<IValidadorNotaFiscal, ValidadorNotaFiscal>();
 builder.Services.AddScoped<IImportarXmlUseCase,ImportarXmlUseCase>();
+builder.Services.AddScoped<IHistoricoValidacaoRepository, HistoricoValidacaoRepository>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace XmlValidador.Application.Enums
+namespace XmlValidador.Domain.Enums
 {
     public enum SeveridadeValidacao
     {

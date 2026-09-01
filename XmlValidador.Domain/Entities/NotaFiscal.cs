@@ -7,8 +7,7 @@ namespace XmlValidador.Domain.Entities
 {
     public class NotaFiscal
     {
-        private readonly List<ItemNotaFiscal> _itens = new();
-
+        
         public Guid Id { get; private set; }
 
         public ChaveAcessoNfe ChaveAcesso { get; private set; }
@@ -23,8 +22,15 @@ namespace XmlValidador.Domain.Entities
 
         public ValorMonetario ValorTotal { get; private set; }
 
+
+        private readonly List<ItemNotaFiscal> _itens = new();
         public IReadOnlyCollection<ItemNotaFiscal> Itens =>
             _itens.AsReadOnly();
+
+        private readonly List<HistoricoValidacao> _historicos = new();
+
+        public IReadOnlyCollection<HistoricoValidacao> Historicos =>
+        _historicos.AsReadOnly();
 
         private NotaFiscal()
         {
@@ -65,6 +71,14 @@ namespace XmlValidador.Domain.Entities
                 throw new ArgumentNullException(nameof(item));
 
             _itens.Add(item);
+        }
+
+        public void AdicionarHistorico(HistoricoValidacao historico)
+        {
+            if (historico == null)
+                throw new ArgumentNullException(nameof(historico));
+
+            _historicos.Add(historico);
         }
     }
 }

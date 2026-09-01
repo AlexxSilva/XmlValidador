@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using XmlValidador.Infrastructure.Data;
 
@@ -12,9 +13,11 @@ using XmlValidador.Infrastructure.Data;
 namespace XmlValidador.Infrastructure.Migrations
 {
     [DbContext(typeof(XmlValidadorDbContext))]
-    partial class XmlValidadorDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901231502_AdicionarErrosHistoricoValidacao")]
+    partial class AdicionarErrosHistoricoValidacao
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
