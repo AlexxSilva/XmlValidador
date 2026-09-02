@@ -34,10 +34,14 @@ builder.Services.AddScoped<IRegraValidacao, NfePossuiItensValidator>();
 builder.Services.AddScoped<IRegraValidacao, CnpjEmitenteValidator>();
 builder.Services.AddScoped<IRegraValidacao, ChaveAcessoValidator>();
 builder.Services.AddScoped<IRegraValidacao, TotalItensValidator>();
+builder.Services.AddScoped<IRegraValidacao, NcmValidator>();
+builder.Services.AddScoped<IRegraValidacao, CodigoIbgeMunicipioValidator>();
 builder.Services.AddScoped<INotaFiscalRepository, NotaFiscalRepository>();
 builder.Services.AddScoped<IValidadorNotaFiscal, ValidadorNotaFiscal>();
 builder.Services.AddScoped<IImportarXmlUseCase,ImportarXmlUseCase>();
 builder.Services.AddScoped<IHistoricoValidacaoRepository, HistoricoValidacaoRepository>();
+
+
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -93,59 +97,6 @@ app.MapPost("/api/nfe/importar",
     .DisableAntiforgery();
 
 
-app.MapPost("/teste-banco", async (XmlValidadorDbContext db) =>
-{
-    var empresa = new Empresa(
-        "Empresa Teste",
-        "Empresa Teste",
-        new Cnpj("12345678000195"),
-        "123456789",
-        "Rua Teste",
-        "100",
-        "Centro",
-        "1234567",
-        "São Paulo",
-        "SP",
-        "01000000",
-        "1058",
-        "Brasil"
-    );
-
-    var notaFiscal = new NotaFiscal(
-        new ChaveAcessoNfe(
-            "35260812345678000195550010000000011000000010"),
-        1,
-        1,
-        DateTime.Now,
-        empresa,
-        new ValorMonetario(150m)
-    );
-
-    var item = new ItemNotaFiscal(
-        notaFiscal.Id,
-        1,
-        "001",
-        "Produto Teste",
-        1m,
-        new ValorMonetario(150m),
-        new ValorMonetario(150m)
-    );
-
-    notaFiscal.AdicionarItem(item);
-
-    db.Empresas.Add(empresa);
-    db.NotasFiscais.Add(notaFiscal);
-    db.ItensNotaFiscal.Add(item);
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok(new
-    {
-        empresa.Id,
-        notaFiscal.Numero,
-        item.CodigoProduto
-    });
-});
 
 app.Run();
 

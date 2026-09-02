@@ -21,7 +21,7 @@ namespace XmlValidador.Tests.Application.ValidacoesXml
 
             var nota = new NotaFiscal(chave, 1, 1, DateTime.Now, empresa, new ValorMonetario(100));
 
-            nota.AdicionarItem(new ItemNotaFiscal(nota.Id, 1,"00001", "Produto Teste", 1, new ValorMonetario(100), new ValorMonetario(100)));
+            nota.AdicionarItem(new ItemNotaFiscal(nota.Id, 1,"00001", "Produto Teste", "12345678", 1, new ValorMonetario(100), new ValorMonetario(100)));
 
             var validator = new NfePossuiItensValidator();
             // Act

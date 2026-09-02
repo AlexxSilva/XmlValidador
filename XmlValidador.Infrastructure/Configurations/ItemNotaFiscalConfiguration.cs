@@ -25,6 +25,8 @@ namespace XmlValidador.Infrastructure.Configurations
                 builder.Property(x => x.Quantidade)
                     .HasPrecision(18, 4);
 
+                builder.Property(x => x.Ncm).HasMaxLength(8);
+
                 builder.ComplexProperty(x => x.ValorUnitario, valor =>
                 {
                     valor.Property(x => x.Valor)

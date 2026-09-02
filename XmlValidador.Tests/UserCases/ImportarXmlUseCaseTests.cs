@@ -230,6 +230,7 @@ namespace XmlValidador.Tests.UserCases
                 1,
                 "001",
                 "Produto Teste",
+                "12345678",
                 1m,
                 new ValorMonetario(150m),
                 new ValorMonetario(150m)

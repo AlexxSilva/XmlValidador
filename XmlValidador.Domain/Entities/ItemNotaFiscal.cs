@@ -13,15 +13,19 @@ namespace XmlValidador.Domain.Entities
         public int Nitem { get; private set; }
         public string? CodigoProduto { get; private set; }
         public string? Descricao { get; private set; }
+
+        public string? Ncm { get; set; }
         public decimal Quantidade { get; private set; }
         public ValorMonetario ValorUnitario { get; private set; }
         public ValorMonetario ValorTotal { get; private set; }
         public DateTime DataCadastro { get; private set; }
 
+        
+
         private ItemNotaFiscal()
         {
         }
-        public ItemNotaFiscal(Guid notaFiscalId,int nitem,string? codigoProduto,string? descricao,
+        public ItemNotaFiscal(Guid notaFiscalId,int nitem,string? codigoProduto,string? descricao, string ? ncm,
         decimal quantidade,ValorMonetario valorUnitario,ValorMonetario valorTotal)
         {
 
@@ -45,6 +49,7 @@ namespace XmlValidador.Domain.Entities
             ValorUnitario = valorUnitario;
             ValorTotal = valorTotal;
             DataCadastro = DateTime.Now;
+            Ncm = ncm;
 
 
         }

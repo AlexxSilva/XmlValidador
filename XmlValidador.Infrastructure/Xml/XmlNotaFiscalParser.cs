@@ -258,6 +258,10 @@ namespace XmlValidador.Infrastructure.Xml
                     .Element(ns + "xProd")?
                     .Value;
 
+                var ncm = prod
+                      .Element(ns + "NCM")?
+                      .Value;
+
                 var quantidadeTexto = prod
                     .Element(ns + "qCom")?
                     .Value;
@@ -269,6 +273,8 @@ namespace XmlValidador.Infrastructure.Xml
                 var valorTotalTexto = prod
                     .Element(ns + "vProd")?
                     .Value;
+
+           
 
                 if (!decimal.TryParse(
                         quantidadeTexto,
@@ -313,6 +319,7 @@ namespace XmlValidador.Infrastructure.Xml
                         numeroItem,
                         codigo,
                         descricao,
+                        ncm,
                         quantidade,
                         valorUnitarioFormat,
                         valorTotalFormat);
