@@ -1,0 +1,73 @@
+﻿@using System.Xml.Linq;
+@inject HttpClient Http
+
+@page "/importar"
+
+<PageTitle>Importar NF-e</PageTitle>
+
+<h1> Importar NF-e</h1>
+
+<p>Selecione o arquivo XML para validação.</p>
+
+<InputFile OnChange="SelecionarArquivo"></InputFile>
+
+@if (!string.IsNullOrEmpty(nomeArquivo))
+{
+    <p>Arquivo selecionado: @nomeArquivo</p>
+}
+
+@if (!string.IsNullOrEmpty(xml))
+{
+    <h3>Conteúdo do XML</h3>
+
+    <pre>@xml</pre>
+
+    <button @onclick="ValidarXml">
+        Validar Xml
+    </button>
+}
+
+
+@code
+{
+    private string? nomeArquivo;
+    private string? xml;
+
+    private async Task SelecionarArquivo(InputFileChangeEventArgs e)
+    {
+        var arquivo = e.File;
+
+        nomeArquivo = arquivo.Name;
+
+        using var stream = arquivo.OpenReadStream();
+
+        using var reader = new StreamReader(stream);
+
+        var conteudo = await reader.ReadToEndAsync();
+
+        var documento = XDocument.Parse(conteudo);
+
+        xml = documento.ToString();
+
+        Console.WriteLine(xml);
+    }
+
+    private async Task ValidarXml()
+    {
+        var conteudo = new ByteArrayContent(
+            System.Text.Encoding.UTF8.GetBytes(xml!));
+
+        using var form = new MultipartFormDataContent();
+
+        form.Add(
+            conteudo,
+            "arquivo",
+            nomeArquivo);
+
+        var resposta = await Http.PostAsync(
+            "api/nfe/validar",
+            form);
+
+        Console.WriteLine(resposta.StatusCode);
+    }
+}
