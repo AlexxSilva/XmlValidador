@@ -1,6 +1,6 @@
 # XMLValidador
 
-Sistema desenvolvido em **C# e .NET 8** para importação, análise e validação de XMLs fiscais, utilizando regras de negócio independentes e uma arquitetura organizada em camadas.
+Sistema desenvolvido em **C# e .NET 10** para importação, análise e validação de XMLs fiscais, utilizando regras de negócio independentes e uma arquitetura organizada em camadas.
 
 O projeto foi desenvolvido com foco em **Engenharia de Software**, aplicando conceitos como Clean Architecture, SOLID, Programação Orientada a Objetos, Injeção de Dependência, testes automatizados e separação de responsabilidades.
 
