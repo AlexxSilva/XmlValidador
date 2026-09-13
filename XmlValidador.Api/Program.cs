@@ -28,6 +28,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAntiforgery();
 
+
+
+
 builder.Services.AddScoped<IXmlNotaFiscalParser, XmlNotaFiscalParser>();
 builder.Services.AddScoped<IValidarXmlUseCase, ValidarXmlUseCase>();
 builder.Services.AddScoped<IRegraValidacao, NfePossuiItensValidator>();
@@ -49,7 +52,22 @@ builder.Services.ConfigureHttpJsonOptions(options =>
         new JsonStringEnumConverter());
 }); //Converter enum para string no JSON
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Blazor", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://localhost:7299",
+                "http://localhost:5023")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("Blazor");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

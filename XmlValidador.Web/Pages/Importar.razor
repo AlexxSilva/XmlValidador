@@ -22,14 +22,28 @@
 
     <pre>@xml</pre>
 
-    <button @onclick="ValidarXml">
-        Validar Xml
+    <button @onclick="ValidarXml"
+            disabled="@validando">
+
+        @if (validando)
+        {
+            <span>Validando...</span>
+        }
+        else
+        {
+            <span>Validar XML</span>
+        }
+
     </button>
 }
 
 
 @code
 {
+    private bool validando = false;
+    private bool? validacaoSucesso = null;
+    private string mensagem = "";
+
     private string? nomeArquivo;
     private string? xml;
 
@@ -52,22 +66,93 @@
         Console.WriteLine(xml);
     }
 
+   
     private async Task ValidarXml()
     {
-        var conteudo = new ByteArrayContent(
-            System.Text.Encoding.UTF8.GetBytes(xml!));
+        try
+        {
+            validando = true;
+            validacaoSucesso = null;
+            mensagem = "";
 
-        using var form = new MultipartFormDataContent();
+            Console.WriteLine("=== INÍCIO DA VALIDAÇÃO ===");
 
-        form.Add(
-            conteudo,
-            "arquivo",
-            nomeArquivo);
+            if (string.IsNullOrWhiteSpace(xml))
+            {
+                Console.WriteLine("XML está vazio.");
 
-        var resposta = await Http.PostAsync(
-            "api/nfe/validar",
-            form);
+                validacaoSucesso = false;
+                mensagem = "Nenhum XML foi carregado.";
 
-        Console.WriteLine(resposta.StatusCode);
+                return;
+            }
+
+            Console.WriteLine($"Arquivo: {nomeArquivo}");
+            Console.WriteLine($"Tamanho XML: {xml.Length} caracteres");
+
+            var conteudo = new ByteArrayContent(
+                System.Text.Encoding.UTF8.GetBytes(xml));
+
+            using var form = new MultipartFormDataContent();
+
+            form.Add(
+                conteudo,
+                "arquivo",
+                nomeArquivo);
+
+            Console.WriteLine("Enviando requisição para:");
+            Console.WriteLine($"{Http.BaseAddress}api/nfe/Importar");
+
+            var resposta = await Http.PostAsync(
+                "api/nfe/Importar",
+                form);
+
+            Console.WriteLine($"Status Code: {(int)resposta.StatusCode}");
+            Console.WriteLine($"Status: {resposta.StatusCode}");
+
+            var corpoResposta = await resposta.Content.ReadAsStringAsync();
+
+            Console.WriteLine("Resposta da API:");
+            Console.WriteLine(corpoResposta);
+
+            if (!resposta.IsSuccessStatusCode)
+            {
+                Console.WriteLine("A API respondeu com erro.");
+
+                validacaoSucesso = false;
+                mensagem = "O XML não pôde ser validado.";
+
+                return;
+            }
+
+            Console.WriteLine("Validação realizada com sucesso.");
+
+            validacaoSucesso = true;
+            mensagem = "XML validado com sucesso!";
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine("=== ERRO HTTP ===");
+            Console.WriteLine($"Mensagem: {ex.Message}");
+            Console.WriteLine($"InnerException: {ex.InnerException?.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+            validacaoSucesso = false;
+            mensagem = "Não foi possível conectar à API.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("=== ERRO GERAL ===");
+            Console.WriteLine($"Tipo: {ex.GetType().FullName}");
+            Console.WriteLine($"Mensagem: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+            validacaoSucesso = false;
+            mensagem = "Ocorreu um erro durante a validação.";
+        }
+        finally
+        {
+            validando = false;
+        }
     }
 }

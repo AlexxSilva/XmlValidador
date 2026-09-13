@@ -66,17 +66,19 @@ namespace XmlValidador.Application.UseCases.ImportarXml
                     resultado.Erros.AddRange(resultadoValidacao.Erros);
                 }
 
+                // Só importa a NF se estiver válida
+                if (!resultado.Erros.Any())
+                {
+                    await _repository.AdicionarAsync(notaFiscal);
+                }
+
                 // Salva o histórico da tentativa
                 await SalvarHistoricoAsync(
                     notaFiscal.Id,
                     xml,
                     resultado);
 
-                // Só importa a NF se estiver válida
-                if (!resultado.Erros.Any())
-                {
-                    await _repository.AdicionarAsync(notaFiscal);
-                }
+                
             }
             catch (XmlInvalidoException ex)
             {
@@ -103,24 +105,44 @@ namespace XmlValidador.Application.UseCases.ImportarXml
     string xml,
     ResultadoValidacaoDto resultado)
         {
-            var historico = new HistoricoValidacao(
-                notaFiscalId,
-                DateTime.Now,
-                !resultado.Erros.Any(),
-                xml);
-
-            foreach (var erro in resultado.Erros)
+            try
             {
-                var erroHistorico = new ErroHistoricoValidacao(
-                    historico.Id,
-                    erro.Codigo,
-                    erro.Mensagem,
-                    erro.Severidade);
 
-                historico.AdicionarErro(erroHistorico);
+                var historico = new HistoricoValidacao(
+                    notaFiscalId,
+                    DateTime.Now,
+                    !resultado.Erros.Any(),
+                    xml);
+
+                foreach (var erro in resultado.Erros)
+                {
+                    var erroHistorico = new ErroHistoricoValidacao(
+                        historico.Id,
+                        erro.Codigo,
+                        erro.Mensagem,
+                        erro.Severidade);
+
+                    historico.AdicionarErro(erroHistorico);
+                }
+
+                await _historicoRepository.AdicionarAsync(historico);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("=== ERRO AO SALVAR HISTÓRICO ===");
+                Console.WriteLine($"Tipo: {ex.GetType().Name}");
+                Console.WriteLine($"Mensagem: {ex.Message}");
 
-            await _historicoRepository.AdicionarAsync(historico);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("=== INNER EXCEPTION ===");
+                    Console.WriteLine($"Tipo: {ex.InnerException.GetType().Name}");
+                    Console.WriteLine($"Mensagem: {ex.InnerException.Message}");
+                }
+
+                Console.WriteLine("=== STACK TRACE ===");
+                Console.WriteLine(ex.StackTrace);
+            }
         }
     }
 }
